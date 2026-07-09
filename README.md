@@ -1,45 +1,40 @@
 # MoneyLog
 
-A simple and clean Flutter expense tracking app built for learning and portfolio purposes.
-
 <p align="center">
   <img src="assets/images/logo.png" alt="MoneyLog Logo" width="140"/>
 </p>
 
-## Overview
+A simple and lightweight **Daily Expense Manager** built with Flutter. Record your day-to-day expenses quickly, organize them by category, and keep track of your spending with a clean and minimal interface.
 
-MoneyLog is a lightweight money management application that helps users record their daily expenses with minimal effort.
+## ✨ Features
 
-The goal of this project is to demonstrate clean Flutter architecture, authentication, and basic CRUD functionality without unnecessary complexity.
-
-## Features
-
-* Google Sign-In using Supabase OAuth
+* Google Sign-In with Supabase OAuth
 * Secure user authentication
-* Add expense records
-* View expenses in a simple grid layout
-* Clean and minimal UI
-* Notes support (optional)
+* Add daily expense records
+* Categorize expenses
+* Optional notes for each expense
+* Simple grid view of all expenses
+* Clean and responsive UI
 
-## Expense Form
+## 📝 Expense Entry
 
-Each expense contains:
+Each expense includes:
 
-* Name
-* Expense Amount
-* Expense Type
-* Category
-* Notes (Optional)
+* **Name**
+* **Expense Amount**
+* **Expense Type**
+* **Category**
+* **Notes (Optional)**
 
-## Tech Stack
+## 🛠 Tech Stack
 
 * Flutter
 * Dart
 * Supabase
 * Google OAuth
-* BLoC (State Management)
+* flutter_bloc
 
-## Project Structure
+## 📂 Project Structure
 
 ```text
 lib/
@@ -51,13 +46,7 @@ lib/
 └── main.dart
 ```
 
-## Screens
-
-* Authentication
-* Expense Form
-* Expense Grid
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Clone the repository
 
@@ -71,9 +60,7 @@ git clone https://github.com/your-username/moneylog.git
 flutter pub get
 ```
 
-### Configure environment variables
-
-Create a `.env` file in the project root.
+### Create a `.env` file
 
 ```env
 SUPABASE_URL=YOUR_SUPABASE_URL
@@ -86,35 +73,29 @@ SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 flutter run
 ```
 
-## Dependencies
+## 📌 Current Version
 
-* supabase_flutter
-* flutter_bloc
-* flutter_dotenv
+The current version focuses on fast and simple daily expense tracking.
 
-## Current Status
+* Authentication
+* Daily expense logging
+* Expense list/grid view
 
-This is the initial version of the application.
+## 🔮 Planned Features
 
-Current functionality includes:
-
-* User authentication
-* Expense entry form
-* Expense grid viewer
-
-Future versions may include:
-
-* Search and filtering
-* Monthly reports
+* Income tracking
+* Search expenses
+* Filter by category
+* Monthly and yearly reports
 * Charts and analytics
-* Export to CSV
+* CSV export
 * Offline support
 * Dark mode
 
-## Screenshots
+## 📸 Screenshots
 
-Add screenshots here after the UI is complete.
+Screenshots will be added after the UI is finalized.
 
-## License
+## 📄 License
 
-This project is open-source and intended for educational and portfolio use.
+This project is open source and created for learning and portfolio purposes.
