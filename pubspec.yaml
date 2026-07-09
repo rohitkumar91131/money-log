@@ -1,0 +1,53 @@
+name: moneylog
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  bloc: ^9.2.1
+  flutter_bloc: ^9.1.1
+  supabase_flutter: ^2.16.0
+  app_links: ^7.0.0
+  flutter_dotenv: ^6.0.1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  shared_preferences: ^2.5.5
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/logo.png
+
+flutter_launcher_icons:
+  image_path: "assets/images/logo.png"
+  android: true
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground_inset: 0
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/images/logo.png"
+  windows:
+    generate: true
+    image_path: "assets/images/logo.png"
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: "assets/images/logo.png"
+  linux:
+    generate: true
