@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // --- AUTH IMPORTS ---
 import 'package:moneylog/features/auth/data/auth_repository.dart';
 import 'package:moneylog/features/auth/providers/auth_cubit.dart';
 import 'package:moneylog/features/auth/presentation/screens/auth_screen.dart';
 
-// --- PROFILE IMPORTS ---
-import 'package:moneylog/features/profile/presentation/screens/profile_screen.dart';
-import 'package:moneylog/features/profile/providers/profile_cubit.dart';
-import 'package:moneylog/features/profile/data/profile_repository.dart';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// --- EXPENSE IMPORTS (THE NEW PREMIUM FEATURE) ---
+import 'package:moneylog/features/expense/data/expense_repository.dart';
+import 'package:moneylog/features/expense/providers/expense_cubit.dart';
+import 'package:moneylog/features/expense/presentation/screens/homepage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   print('🛑 [main.dart] Initializing Supabase...');
 
+  // Yahan humne default storage par hi rakha hai (No extra packages needed)
   await supabase.Supabase.initialize(
-    url: dotenv.get('SUPABASE_URL'),
-    publishableKey: dotenv.get('SUPABASE_PUBLISHABLE_KEY'),
+    url: dotenv.get('SUPABASE_URL') ?? '',
+    publishableKey: dotenv.get('SUPABASE_PUBLISHABLE_KEY') ?? '',
   );
 
   print('✅ [main.dart] Supabase Initialized!');
@@ -39,6 +39,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
         useMaterial3: true,
+        scaffoldBackgroundColor:
+            Colors.grey[50], // Cards ke peeche smooth grey background
       ),
       home: const AuthGate(),
     );
@@ -65,7 +67,7 @@ class AuthGate extends StatelessWidget {
         if (state == null) {
           print('⚠️ [AuthGate Stream] Snapshot data is null');
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(child: CircularProgressIndicator(color: Colors.black)),
           );
         }
 
@@ -76,12 +78,13 @@ class AuthGate extends StatelessWidget {
 
         if (isLoggedIn) {
           print(
-            '🚀 [AuthGate Stream] User is Logged In! Routing to ProfileScreen...',
+            '🚀 [AuthGate Stream] User is Logged In! Routing to Homepage...',
           );
+          // Naye ExpenseCubit ko initialize karke fetchExpenses() call kar rahe hain
           return BlocProvider(
             create: (context) =>
-                ProfileCubit(ProfileRepository())..loadProfile(),
-            child: const ProfileScreen(),
+                ExpenseCubit(ExpenseRepository())..fetchExpenses(),
+            child: const Homepage(),
           );
         }
 
