@@ -32,9 +32,7 @@ class _HomepageState extends State<Homepage> {
   }
 
   void _openAddExpenseModal(BuildContext context) {
-    // 🚀 THE FIX: Purane context se Cubit ko pakdo
     final cubit = context.read<ExpenseCubit>();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -42,26 +40,24 @@ class _HomepageState extends State<Homepage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) {
-        // 🚀 THE FIX: Nayi screen ko BlocProvider.value ke through pass kar do
-        return BlocProvider.value(
-          value: cubit,
-          child: AddExpenseModal(
-            initialDate: _selectedDate ?? DateTime.now(),
-            onSave: (name, amount, type, category, notes, entryDate) {
-              final newExpense = ExpenseModel(
+      builder: (_) => BlocProvider.value(
+        value: cubit,
+        child: AddExpenseModal(
+          initialDate: _selectedDate ?? DateTime.now(),
+          onSave: (name, amount, type, category, notes, entryDate) {
+            cubit.addNewExpense(
+              ExpenseModel(
                 name: name,
                 amount: amount,
                 expenseType: type,
                 category: category,
                 notes: notes,
                 entryDate: entryDate,
-              );
-              cubit.addNewExpense(newExpense);
-            },
-          ),
-        );
-      },
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -84,31 +80,102 @@ class _HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.grey[50],
         elevation: 0,
-        title: GestureDetector(
-          onTap: _pickDate,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _getDateLabel(),
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black, size: 28),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+        title: BlocBuilder<ExpenseCubit, ExpenseState>(
+          builder: (context, state) {
+            String titleText = _getDateLabel();
+            Widget? statusIcon;
+            Color textColor = Colors.black;
+            bool showOfflineDot = false;
+
+            if (state is ExpenseLoaded) {
+              showOfflineDot = state.isOffline;
+
+              if (state.syncStatus == SyncStatus.Syncing) {
+                titleText = 'Syncing...';
+                textColor = Colors.grey[600]!;
+                statusIcon = const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.grey,
+                  ),
+                );
+              } else if (state.syncStatus == SyncStatus.error) {
+                titleText = 'Waiting for network...';
+                textColor = Colors.orange[700]!;
+                statusIcon = Icon(
+                  Icons.cloud_off,
+                  size: 16,
+                  color: Colors.orange[700],
+                );
+              }
+            }
+
+            return GestureDetector(
+              onTap: _pickDate,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0.0, -0.5),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: Row(
+                  key: ValueKey<String>(titleText),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      titleText,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (statusIcon != null) ...[
+                      const SizedBox(width: 8),
+                      statusIcon,
+                    ] else ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.black,
+                        size: 24,
+                      ),
+                      if (showOfflineDot)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Icon(
+                            Icons.cloud_off,
+                            color: Colors.red[300],
+                            size: 16,
+                          ),
+                        ),
+                    ],
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.keyboard_arrow_down,
-                color: Colors.black,
-                size: 28,
-              ),
-            ],
-          ),
+            );
+          },
         ),
         actions: [
           if (_selectedDate != null)
@@ -116,22 +183,24 @@ class _HomepageState extends State<Homepage> {
               icon: const Icon(Icons.clear, color: Colors.red),
               onPressed: () => setState(() => _selectedDate = null),
             ),
+          const SizedBox(width: 8),
         ],
       ),
       body: BlocBuilder<ExpenseCubit, ExpenseState>(
         builder: (context, state) {
-          if (state is ExpenseLoading)
+          if (state is ExpenseLoading) {
             return const Center(
               child: CircularProgressIndicator(color: Colors.black),
             );
-          if (state is ExpenseError)
+          }
+          if (state is ExpenseError) {
             return Center(
               child: Text(
                 state.message,
                 style: const TextStyle(color: Colors.red),
               ),
             );
-
+          }
           if (state is ExpenseLoaded) {
             List<ExpenseModel> displayList = state.expenses;
             if (_selectedDate != null) {
@@ -145,27 +214,49 @@ class _HomepageState extends State<Homepage> {
                   .toList();
             }
 
-            if (displayList.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.receipt_long, size: 64, color: Colors.grey[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No transactions for ${_getDateLabel().toLowerCase()}',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 16),
+            // 🚀 THE MAGIC: RefreshIndicator added!
+            return RefreshIndicator(
+              color: Colors.black,
+              backgroundColor: Colors.white,
+              onRefresh: () async {
+                // Manually trigger the fetch & sync process
+                await context.read<ExpenseCubit>().fetchExpenses();
+              },
+              child: displayList.isEmpty
+                  // If empty, use a scrollable view so pull-to-refresh still works
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.receipt_long,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No transactions for ${_getDateLabel().toLowerCase()}',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  // The populated list
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(20),
+                      itemCount: displayList.length,
+                      itemBuilder: (context, index) =>
+                          PremiumExpenseCard(expense: displayList[index]),
                     ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: displayList.length,
-              itemBuilder: (context, index) =>
-                  PremiumExpenseCard(expense: displayList[index]),
             );
           }
           return const SizedBox.shrink();

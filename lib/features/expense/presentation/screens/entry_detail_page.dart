@@ -22,7 +22,6 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Jo data pehle se save hai, usko TextFields me daal rahe hain
     _nameCtrl = TextEditingController(text: widget.expense.name);
     _amountCtrl = TextEditingController(text: widget.expense.amount.toString());
     _notesCtrl = TextEditingController(text: widget.expense.notes ?? '');
@@ -36,9 +35,7 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
     super.dispose();
   }
 
-  // 🚀 THE SAVE CHANGES LOGIC
   void _saveChanges() {
-    // 1. Validation check
     if (_nameCtrl.text.trim().isEmpty || _amountCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -52,11 +49,8 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
       return;
     }
 
-    // 2. Naya object banana naye data ke sath
     final updatedExpense = ExpenseModel(
-      id: widget
-          .expense
-          .id, // ID same rahegi taaki Supabase ko pata chale kisse update karna hai
+      id: widget.expense.id,
       name: _nameCtrl.text.trim(),
       amount: double.tryParse(_amountCtrl.text.trim()) ?? widget.expense.amount,
       expenseType: widget.expense.expenseType,
@@ -66,10 +60,8 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
       createdAt: widget.expense.createdAt,
     );
 
-    // 3. Cubit ko bhejna database update karne ke liye
     context.read<ExpenseCubit>().updateExistingExpense(updatedExpense);
 
-    // 4. Edit mode band karna aur success message dikhana
     setState(() => _isEditing = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -79,11 +71,10 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
     );
   }
 
-  // 🗑️ DELETE LOGIC
   void _deleteEntry() {
     if (widget.expense.id != null) {
       context.read<ExpenseCubit>().removeExpense(widget.expense.id!);
-      Navigator.pop(context); // Delete hone ke baad screen band kar do
+      Navigator.pop(context);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('🗑️ Entry deleted!')));
@@ -101,11 +92,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
-          // Delete Button (Trash Icon)
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.red),
             onPressed: () {
-              // Delete karne se pehle confirmation alert
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
@@ -136,16 +125,23 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
         ],
       ),
       body: GestureDetector(
-        // Screen par kahin bhi tap karne se Edit Mode ON ho jayega
+        // 🚀 THE FIX: Swipe Right to Go Back Logic
+        onHorizontalDragEnd: (details) {
+          // Check if the swipe was to the right with decent speed
+          if (details.primaryVelocity != null &&
+              details.primaryVelocity! > 300) {
+            Navigator.pop(context); // Go back to the previous screen
+          }
+        },
         onTap: () {
           if (!_isEditing) setState(() => _isEditing = true);
         },
+        // The rest of your UI stays exactly the same
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- DATE BADGE ---
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -165,7 +161,6 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
               ),
               const SizedBox(height: 24),
 
-              // --- TITLE FIELD ---
               _isEditing
                   ? TextField(
                       controller: _nameCtrl,
@@ -190,7 +185,6 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
 
               const SizedBox(height: 16),
 
-              // --- AMOUNT FIELD ---
               _isEditing
                   ? TextField(
                       controller: _amountCtrl,
@@ -227,7 +221,6 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
               ),
               const SizedBox(height: 12),
 
-              // --- NOTES FIELD ---
               _isEditing
                   ? TextField(
                       controller: _notesCtrl,
@@ -272,7 +265,6 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
           ),
         ),
       ),
-      // --- SAVE CHANGES BUTTON (Floating) ---
       floatingActionButton: _isEditing
           ? FloatingActionButton.extended(
               onPressed: _saveChanges,
